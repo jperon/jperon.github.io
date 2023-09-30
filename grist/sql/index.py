@@ -1,4 +1,4 @@
-grist.ready({"requiredAccess": "full"})
+grist.ready({"requiredAccess": "full", "allowSelectBy": True})
 
 def create_table(id, data, header):
   table = document.createElement("table")
@@ -34,11 +34,21 @@ async def ctrl_enter(evt):
     data = await fetch(
       f"{api.baseUrl}/sql?auth={api.token}&q={query.value}"
     ).then(lambda x: x.json())
-    header = dict(data.records[0].fields).keys()
-    aoa = ((
-        JSON.stringify(row.fields[fname], null, 2) for fname in header
-    ) for row in data.records)
-    create_table('reply', aoa, header)
+    if data.records:
+      if data.records[0]:
+        header = dict(data.records[0].fields).keys()
+        aoa = [ [
+            JSON.stringify(row.fields[fname], null, 2) for fname in header
+        ] for row in data.records ]
+        create_table('reply', aoa, header)
+        if 'id' in header:
+          await grist.setCursorPos(1)
+          await grist.setSelectedRows([row.fields['id'] for row in data.records])
+      else:
+        reply.innerHTML = "No result."
+    else:
+      console.warn("ERR\n", data)
+      reply.innerHTML = data.error
     evt.preventDefault()
 query.addEventListener("keydown", ctrl_enter)
 
