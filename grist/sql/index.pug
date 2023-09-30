@@ -1,0 +1,19 @@
+doctype html
+html(lang="fr")
+
+  head
+    meta(charset="utf-8")/
+    meta(name="viewport" content="width=device-width, height=device-height, initial-scale=1")/
+    title SQL widget
+    script(src="https://docs.getgrist.com/grist-plugin-api.js")
+
+    style.
+      #query {width:95vw; height:30vh}
+
+  body
+    label Query (Ctrl+Enter to validate)
+      textarea#query
+    #reply
+      .firstChild
+
+  script(type="module" src="index.py")

@@ -1,4 +1,5 @@
-jperon.github.io
-================
+[Grist widgets](grist/)
 
-Site perso
+[Calcul mental](mental/)
+
+[Latin.pattern](latin/Latin.pattern)
