@@ -11,9 +11,20 @@ html(lang="fr")
       #query {width:95vw; height:30vh}
 
   body
+    label Key
+      input#key
+    br/
     label Query (Ctrl+Enter to validate)
       textarea#query
+    #csv
+      form(onsubmit="download('res.csv', this['csv'].value)")
+        input.csv(type="hidden" name="csv")
+        input(type="submit" value="Télécharger")
     #reply
       .firstChild
 
+  script.
+    function createObject(params){
+      return new Object(params);
+    }
   script(type="module" src="index.py")
