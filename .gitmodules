@@ -1,0 +1,3 @@
+[submodule "grist/Grist-pug-py-widget"]
+	path = grist/Grist-pug-py-widget
+	url = https://github.com/jperon/Grist-pug-py-widget
