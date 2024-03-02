@@ -1,3 +1,7 @@
 [submodule "grist/Grist-pug-py-widget"]
 	path = grist/Grist-pug-py-widget
 	url = https://github.com/jperon/Grist-pug-py-widget
+[submodule "grist/grist-pug-py-widget2"]
+	path = grist/grist-pug-py-widget2
+	url = https://github.com/gristlabs/grist-pug-py-widget
+	branch = configurable
