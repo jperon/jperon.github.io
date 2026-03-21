@@ -5,3 +5,6 @@
 	path = grist/grist-pug-py-widget2
 	url = https://github.com/gristlabs/grist-pug-py-widget
 	branch = configurable
+[submodule "music-pwa"]
+	path = music-pwa
+	url = https://github.com/jperon/music-pwa
