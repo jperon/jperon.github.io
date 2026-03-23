@@ -1,6 +1,6 @@
 [Grist widgets](grist/)
 
-[Partitura](music-pwa/)
+[Cantus](cantus/)
 
 [Calcul mental](mental/)
 
