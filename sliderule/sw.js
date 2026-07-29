@@ -3,7 +3,7 @@
   // sw.coffee — Service worker for offline PWA
   var ASSETS, CACHE_NAME;
 
-  CACHE_NAME = 'slide-rule-v38';
+  CACHE_NAME = 'slide-rule-v39';
 
   ASSETS = ['./', './index.html', './styles.css', './scales.js', './ruler.js', './app.js', './manifest.json'];
 
@@ -11,8 +11,19 @@
     return event.waitUntil(caches.open(CACHE_NAME).then(function(cache) {
       return cache.addAll(ASSETS);
     }).then(function() {
-      return self.skipWaiting();
+      if (!self.registration.active) {
+        // Activate immediately on the very first install (nothing to preserve).
+        // On a later update, wait for the client to confirm via the "update
+        // available" button, which triggers activation through postMessage.
+        return self.skipWaiting();
+      }
     }));
+  });
+
+  self.addEventListener('message', function(event) {
+    if (event.data === 'skipWaiting') {
+      return self.skipWaiting();
+    }
   });
 
   self.addEventListener('activate', function(event) {

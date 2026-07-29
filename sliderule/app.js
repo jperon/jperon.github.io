@@ -588,15 +588,41 @@
 
   // Boot
   window.addEventListener('DOMContentLoaded', function() {
-    var hadController, reloading;
+    var hadController, reloading, showUpdateButton, updateBtn;
     window.app = new App();
     // Register service worker (offline-first: the app always loads instantly
-    // from cache; updates are fetched in the background and applied without
-    // ever blocking on the network).
+    // from cache; updates are fetched in the background and applied only once
+    // the user confirms via the "update available" button).
     if ('serviceWorker' in navigator) {
       // Only auto-reload on a *later* activation, not this page's first install
       hadController = !!navigator.serviceWorker.controller;
+      updateBtn = document.getElementById('update-available');
+      showUpdateButton = function(reg) {
+        updateBtn.classList.remove('hidden');
+        return updateBtn.onclick = function() {
+          var ref;
+          updateBtn.disabled = true;
+          return (ref = reg.waiting) != null ? ref.postMessage('skipWaiting') : void 0;
+        };
+      };
       navigator.serviceWorker.register('sw.js').then(function(reg) {
+        if (reg.waiting && hadController) {
+          // A worker may already be waiting if this page loaded right after an
+          // update was fetched elsewhere
+          showUpdateButton(reg);
+        }
+        reg.addEventListener('updatefound', function() {
+          var newWorker;
+          newWorker = reg.installing;
+          if (newWorker == null) {
+            return;
+          }
+          return newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              return showUpdateButton(reg);
+            }
+          });
+        });
         // Check for a newer version whenever the app regains focus, since a
         // PWA is often reopened from a home-screen icon after a long time away
         return document.addEventListener('visibilitychange', function() {
@@ -607,8 +633,8 @@
       }).catch(function(err) {
         return console.warn('Service worker registration failed:', err);
       });
-      // Once a background update finishes installing, the new worker activates
-      // and claims control; reload once to pick up the new cached assets.
+      // Once the user-confirmed update finishes activating, reload once to
+      // pick up the new cached assets.
       reloading = false;
       return navigator.serviceWorker.addEventListener('controllerchange', function() {
         if (reloading || !hadController) {

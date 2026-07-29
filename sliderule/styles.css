@@ -110,6 +110,21 @@ canvas#ruler:active {
   background: rgba(230, 230, 230, 0.98);
 }
 
+#update-available.hidden {
+  display: none;
+}
+
+#update-available {
+  background: rgba(0, 190, 130, 0.95) !important;
+  border-color: #00a875 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+#update-available:hover {
+  background: rgba(0, 170, 115, 0.98) !important;
+}
+
 /* Configuration panel */
 #panel {
   position: absolute;
