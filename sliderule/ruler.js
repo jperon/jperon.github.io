@@ -70,7 +70,7 @@
     }
 
     _drawCircle(index, circle) {
-      var ctx, innerR, j, len, outerR, ref, results1, rotation, scale, side;
+      var ctx, hasBoth, innerR, j, len, outerR, ref, results1, rotation, scale, side;
       ctx = this.ctx;
       ({
         outer: outerR,
@@ -95,8 +95,12 @@
       ctx.beginPath();
       ctx.arc(this.cx, this.cy, innerR, 0, 2 * Math.PI);
       ctx.stroke();
+      // Draw scales on this ring. When a ring carries scales on both edges,
+      // each one only gets half the ring's width to grow into, so their ticks
+      // and numerals (which extend inward from their own edge) don't meet and
+      // overlap in the middle.
+      hasBoth = (circle.outer != null) && circle.outer.visible !== false && (circle.inner != null) && circle.inner.visible !== false;
       ref = ['outer', 'inner'];
-      // Draw scales on this ring
       results1 = [];
       for (j = 0, len = ref.length; j < len; j++) {
         side = ref[j];
@@ -104,13 +108,13 @@
         if (!((scale != null) && scale.visible !== false)) {
           continue;
         }
-        results1.push(this._drawScale(scale, outerR, innerR, rotation, side));
+        results1.push(this._drawScale(scale, outerR, innerR, rotation, side, index, hasBoth));
       }
       return results1;
     }
 
-    _drawScale(scale, outerR, innerR, rotation, side) {
-      var angle, approxLabelR, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelOffset, labelR, lastLabelAngle, len, letterDiff, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, screenAngle, showLabel, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
+    _drawScale(scale, outerR, innerR, rotation, side, ringIndex = 0, hasBoth = false) {
+      var angle, angularOffset, approxLabelR, budget, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelR, labelSlot, labelTotalAngle, lastLabelAngle, len, letterDiff, letterFontSize, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, screenAngle, showLabel, sizeFactor, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
       if (scale.error) {
         return;
       }
@@ -123,19 +127,37 @@
       // Thus adjacent rings face each other across a shared circle.
       tickDir = isOuter ? -1 : +1;
       ringWidth = outerR - innerR;
-      maxTickLen = Math.max(6, Math.min(20, ringWidth - 8));
+      budget = hasBoth ? ringWidth / 2 : ringWidth;
+      maxTickLen = Math.max(6, Math.min(20, budget - 8));
       // Labels must never collide: skip one that is too close to the previously
       // drawn label. The threshold is the angular width of a ~2-digit label.
-      labelFontSize = 22;
-      approxLabelR = tickRadius + tickDir * (maxTickLen + labelFontSize / 2 + 4);
+      // Font size scales with the space available to this scale (itself derived
+      // from viewport size), so text stays legible on small screens, shrinks
+      // to fit when a ring hosts two scales, and stays proportionate on large
+      // screens without any one label's extent exceeding its half of the ring.
+      // The numeral sits beside its tick (angular offset) rather than beyond
+      // its tip, so it costs almost no extra radial depth; it can afford to be
+      // noticeably larger than when it had to fit within tickLen + full height.
+      // A single-scale ring has twice the budget of a two-scale ring; use a
+      // smaller factor for it so its numerals aren't disproportionately huge
+      // compared to neighboring rings.
+      sizeFactor = hasBoth ? 0.55 : 0.32;
+      labelFontSize = Math.max(9, Math.min(24, budget * sizeFactor));
+      letterFontSize = labelFontSize * (17 / 22);
+      approxLabelR = tickRadius + tickDir * (maxTickLen + labelFontSize * 0.3 + 5);
       minLabelAngle = (labelFontSize * 2 / approxLabelR) * 180 / Math.PI;
       lastLabelAngle = null;
       // The scale letter is drawn at the numeral radius, past the index tick;
       // reserve that angular slot so no numeral overlaps it. The offset is set
       // so the reserved slot's near edge clears the index tick (angle 0) by a
       // small margin, regardless of the letter's width.
-      letterMinAngle = ((17 * 0.75 * scale.label.length + labelFontSize * 2) / 2 / approxLabelR) * 180 / Math.PI;
-      scaleLabelOffset = letterMinAngle + 2;
+      letterMinAngle = ((letterFontSize * 0.75 * scale.label.length + labelFontSize * 2) / 2 / approxLabelR) * 180 / Math.PI;
+      // Stagger each ring/side's fixed label to a distinct angle. Without this,
+      // every ring's letter (and adjacent numerals) would sit at the same
+      // screen angle near the index tick and stack up radially into a jumble
+      // whenever several rings share the same rotation (e.g. the default state).
+      labelSlot = 2 * ringIndex + (isOuter ? 0 : 1);
+      scaleLabelOffset = letterMinAngle + 2 + labelSlot * 12;
       for (j = 0, len = ticks.length; j < len; j++) {
         tick = ticks[j];
         angle = scale.valueToAngle(tick.value);
@@ -200,17 +222,21 @@
         ctx.lineTo(x2, y2);
         ctx.stroke();
         if (showLabel) {
-          // Place the label inside the ring, at the tip of the tick
-          labelOffset = fontSize / 2 + 4;
-          labelR = tickRadius + tickDir * (tickLen + labelOffset);
-          lx = this.cx + labelR * Math.cos(totalAngle);
-          ly = this.cy + labelR * Math.sin(totalAngle);
+          // Place the label just past the tick's tip, with a clear radial gap,
+          // and anchor it on its FIRST character (not its center) so multi-
+          // character labels like "0.5" don't have their leading digit swing
+          // back over the tick line.
+          labelR = tickRadius + tickDir * (tickLen + fontSize * 0.3 + 5);
+          angularOffset = ((lineWidth / 2 + 2) / labelR) * (180 / Math.PI);
+          labelTotalAngle = totalAngle + angularOffset * Math.PI / 180;
+          lx = this.cx + labelR * Math.cos(labelTotalAngle);
+          ly = this.cy + labelR * Math.sin(labelTotalAngle);
           ctx.save();
           ctx.translate(lx, ly);
-          ctx.rotate(totalAngle + Math.PI / 2);
+          ctx.rotate(labelTotalAngle + Math.PI / 2);
           ctx.fillStyle = scale.color;
           ctx.font = 'bold ' + fontSize + 'px sans-serif';
-          ctx.textAlign = 'center';
+          ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           label = this._formatTickLabel(tick.value, scale);
           ctx.fillText(label, 0, 0);
@@ -230,7 +256,7 @@
       ctx.translate(lx, ly);
       ctx.rotate(labelAngle + Math.PI / 2);
       ctx.fillStyle = 'rgba(40, 160, 40, 0.35)';
-      ctx.font = 'bold 17px sans-serif';
+      ctx.font = 'bold ' + letterFontSize + 'px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(scale.label, 0, 0);
