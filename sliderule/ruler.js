@@ -22,7 +22,7 @@
     }
 
     resize() {
-      var nCircles;
+      var holeR, lastHasBoth, lastRing, minHoleR, nCircles;
       this.width = window.innerWidth;
       this.height = window.innerHeight;
       this.canvas.style.width = this.width + 'px';
@@ -35,14 +35,25 @@
       this.outerRadius = Math.min(this.width, this.height) / 2 - 8;
       nCircles = this.config.length;
       this.ringWidth = this.outerRadius / (nCircles * 1.5 + 1);
+      // The innermost ring's inner edge borders the empty center (not another
+      // ring), so unlike every other ring it can grow into that space if it
+      // needs the extra room — e.g. it carries two scales — without disturbing
+      // any other ring's layout. Only borrow from the center when necessary,
+      // and never past a small minimum so a pivot area always remains.
+      lastRing = this.config[nCircles - 1];
+      lastHasBoth = (lastRing != null) && (lastRing.outer != null) && lastRing.outer.visible !== false && (lastRing.inner != null) && lastRing.inner.visible !== false;
+      holeR = this.outerRadius - nCircles * this.ringWidth;
+      minHoleR = this.ringWidth * 0.6;
+      this.lastRingExtra = lastHasBoth ? Math.max(0, Math.min(this.ringWidth * 0.6, holeR - minHoleR)) : 0;
       return this.render();
     }
 
     // Get radius range for a circle index
     circleRadii(index) {
-      var innerR, outerR;
+      var extra, innerR, outerR;
       outerR = this.outerRadius - index * this.ringWidth;
-      innerR = outerR - this.ringWidth;
+      extra = index === this.config.length - 1 ? this.lastRingExtra || 0 : 0;
+      innerR = outerR - this.ringWidth - extra;
       return {
         outer: outerR,
         inner: innerR
@@ -114,7 +125,7 @@
     }
 
     _drawScale(scale, outerR, innerR, rotation, side, ringIndex = 0, hasBoth = false) {
-      var angle, angularOffset, approxLabelR, budget, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelR, labelSlot, labelTotalAngle, lastLabelAngle, len, letterDiff, letterFontSize, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, screenAngle, showLabel, sizeFactor, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
+      var angle, angularOffset, approxLabelR, budget, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelGap, labelHalfHeight, labelR, labelSlot, labelTotalAngle, lastLabelAngle, len, letterDiff, letterFontSize, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, screenAngle, showLabel, sizeFactor, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
       if (scale.error) {
         return;
       }
@@ -128,7 +139,6 @@
       tickDir = isOuter ? -1 : +1;
       ringWidth = outerR - innerR;
       budget = hasBoth ? ringWidth / 2 : ringWidth;
-      maxTickLen = Math.max(6, Math.min(20, budget - 8));
       // Labels must never collide: skip one that is too close to the previously
       // drawn label. The threshold is the angular width of a ~2-digit label.
       // Font size scales with the space available to this scale (itself derived
@@ -144,7 +154,17 @@
       sizeFactor = hasBoth ? 0.55 : 0.32;
       labelFontSize = Math.max(9, Math.min(24, budget * sizeFactor));
       letterFontSize = labelFontSize * (17 / 22);
-      approxLabelR = tickRadius + tickDir * (maxTickLen + labelFontSize * 0.3 + 5);
+      // Reserve room for the label past the tick tip so tick + label together
+      // stay within this scale's half of the ring; otherwise, on a ring with
+      // both an inner and an outer scale, the two sets of numerals meet and
+      // overlap at the ring's midline. The label is vertically centered on its
+      // anchor (textBaseline 'middle'), so roughly half its height reaches
+      // further toward the ring's midline than the anchor point itself —
+      // that half-height must be reserved too.
+      labelGap = labelFontSize * 0.3 + 5;
+      labelHalfHeight = labelFontSize * 0.4;
+      maxTickLen = Math.max(6, Math.min(20, budget - labelGap - labelHalfHeight - 2));
+      approxLabelR = tickRadius + tickDir * (maxTickLen + labelGap);
       minLabelAngle = (labelFontSize * 2 / approxLabelR) * 180 / Math.PI;
       lastLabelAngle = null;
       // The scale letter is drawn at the numeral radius, past the index tick;
@@ -226,7 +246,7 @@
           // and anchor it on its FIRST character (not its center) so multi-
           // character labels like "0.5" don't have their leading digit swing
           // back over the tick line.
-          labelR = tickRadius + tickDir * (tickLen + fontSize * 0.3 + 5);
+          labelR = tickRadius + tickDir * (tickLen + labelGap);
           angularOffset = ((lineWidth / 2 + 2) / labelR) * (180 / Math.PI);
           labelTotalAngle = totalAngle + angularOffset * Math.PI / 180;
           lx = this.cx + labelR * Math.cos(labelTotalAngle);
@@ -352,6 +372,12 @@
 
     _onDown(e) {
       var angle, circle, i, inner, j, len, outer, radius, ref;
+      // Ignore a second simultaneous touch (already dragging with another
+      // pointer): leave it unclaimed and don't prevent its default behavior,
+      // so a two-finger pinch is left for the browser to zoom natively.
+      if (this.dragging != null) {
+        return;
+      }
       e.preventDefault();
       this.canvas.setPointerCapture(e.pointerId);
       angle = this._pointerAngle(e);
@@ -364,6 +390,7 @@
         if (radius >= inner && radius <= outer && circle.rotatable) {
           this.dragging = {
             type: 'circle',
+            pointerId: e.pointerId,
             index: i,
             startAngle: angle,
             startRotation: circle.rotation || 0
@@ -374,6 +401,7 @@
       // Otherwise, drag the cursor
       this.dragging = {
         type: 'cursor',
+        pointerId: e.pointerId,
         startAngle: angle,
         startRotation: this.cursorAngle
       };
@@ -383,8 +411,8 @@
     }
 
     _onMove(e) {
-      var angle, circle, delta;
-      if (!this.dragging) {
+      var angle, circle, delta, ref;
+      if (((ref = this.dragging) != null ? ref.pointerId : void 0) !== e.pointerId) {
         return;
       }
       e.preventDefault();
@@ -410,6 +438,10 @@
     }
 
     _onUp(e) {
+      var ref;
+      if (((ref = this.dragging) != null ? ref.pointerId : void 0) !== e.pointerId) {
+        return;
+      }
       return this.dragging = null;
     }
 
