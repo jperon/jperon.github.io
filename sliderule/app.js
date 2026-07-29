@@ -588,11 +588,34 @@
 
   // Boot
   window.addEventListener('DOMContentLoaded', function() {
+    var hadController, reloading;
     window.app = new App();
-    // Register service worker
+    // Register service worker (offline-first: the app always loads instantly
+    // from cache; updates are fetched in the background and applied without
+    // ever blocking on the network).
     if ('serviceWorker' in navigator) {
-      return navigator.serviceWorker.register('sw.js').catch(function(err) {
+      // Only auto-reload on a *later* activation, not this page's first install
+      hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register('sw.js').then(function(reg) {
+        // Check for a newer version whenever the app regains focus, since a
+        // PWA is often reopened from a home-screen icon after a long time away
+        return document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible') {
+            return reg.update();
+          }
+        });
+      }).catch(function(err) {
         return console.warn('Service worker registration failed:', err);
+      });
+      // Once a background update finishes installing, the new worker activates
+      // and claims control; reload once to pick up the new cached assets.
+      reloading = false;
+      return navigator.serviceWorker.addEventListener('controllerchange', function() {
+        if (reloading || !hadController) {
+          return;
+        }
+        reloading = true;
+        return window.location.reload();
       });
     }
   });

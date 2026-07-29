@@ -110,7 +110,7 @@
     }
 
     _drawScale(scale, outerR, innerR, rotation, side) {
-      var angle, approxLabelR, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelOffset, labelR, lastLabelAngle, len, letterDiff, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, showLabel, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
+      var angle, approxLabelR, ctx, diff, fontSize, isHalf, isOuter, j, label, labelAngle, labelFontSize, labelOffset, labelR, lastLabelAngle, len, letterDiff, letterMinAngle, level, lineWidth, lr, lx, ly, maxTickLen, minLabelAngle, r1, r2, ringWidth, scaleLabelOffset, screenAngle, showLabel, tick, tickDir, tickLen, tickRadius, ticks, totalAngle, x1, x2, y1, y2;
       if (scale.error) {
         return;
       }
@@ -130,10 +130,12 @@
       approxLabelR = tickRadius + tickDir * (maxTickLen + labelFontSize / 2 + 4);
       minLabelAngle = (labelFontSize * 2 / approxLabelR) * 180 / Math.PI;
       lastLabelAngle = null;
-      // The scale letter is drawn at the numeral radius, a few degrees past the
-      // index tick; reserve that angular slot so no numeral overlaps it
-      scaleLabelOffset = 5;
+      // The scale letter is drawn at the numeral radius, past the index tick;
+      // reserve that angular slot so no numeral overlaps it. The offset is set
+      // so the reserved slot's near edge clears the index tick (angle 0) by a
+      // small margin, regardless of the letter's width.
       letterMinAngle = ((17 * 0.75 * scale.label.length + labelFontSize * 2) / 2 / approxLabelR) * 180 / Math.PI;
+      scaleLabelOffset = letterMinAngle + 2;
       for (j = 0, len = ticks.length; j < len; j++) {
         tick = ticks[j];
         angle = scale.valueToAngle(tick.value);
@@ -169,9 +171,12 @@
             }
             showLabel = diff >= minLabelAngle;
           }
-          // Keep numerals clear of the scale letter's reserved slot
+          // Keep numerals clear of the scale letter's reserved slot. The
+          // letter stays fixed on screen while numerals rotate with the ring,
+          // so compare screen-space angles (numeral: angle + rotation).
           if (showLabel) {
-            letterDiff = Math.abs(angle - scaleLabelOffset) % 360;
+            screenAngle = ((angle + rotation) % 360 + 360) % 360;
+            letterDiff = Math.abs(screenAngle - scaleLabelOffset) % 360;
             if (letterDiff > 180) {
               letterDiff = 360 - letterDiff;
             }
@@ -214,8 +219,10 @@
       }
       // Draw the scale label at the numeral radius, past the index tick.
       // Each scale's letter sits at its own numeral radius, so outer and inner
-      // scale letters on the same ring never overlap.
-      labelAngle = (rotation + scaleLabelOffset - 90) * Math.PI / 180;
+      // scale letters on the same ring never overlap. The letter stays fixed
+      // on screen (independent of rotation) so it doesn't wander as the user
+      // turns a rotatable ring.
+      labelAngle = (scaleLabelOffset - 90) * Math.PI / 180;
       lr = approxLabelR;
       lx = this.cx + lr * Math.cos(labelAngle);
       ly = this.cy + lr * Math.sin(labelAngle);
