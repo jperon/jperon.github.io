@@ -321,7 +321,7 @@
       range: [1,
     100],
       color: '#444',
-      side: 'outer',
+      side: 'inner',
       builtin: true
     }),
     new Scale({
@@ -330,7 +330,7 @@
       range: [1,
     100],
       color: '#444',
-      side: 'inner',
+      side: 'outer',
       builtin: true
     }),
     new Scale({
