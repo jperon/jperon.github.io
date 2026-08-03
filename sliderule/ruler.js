@@ -5,7 +5,7 @@
   // Canvas color palette for the current display mode. True black background
   // in dark mode (not dark gray) since this is meant for OLED screens, where
   // black pixels are actually off. Shared by CircularRuler and FlatRuler.
-  var formatTickLabel, themeFor;
+  var FLAT_MARGIN_FRACTION, formatTickLabel, themeFor;
 
   themeFor = function(darkMode) {
     if (darkMode) {
@@ -24,6 +24,12 @@
       };
     }
   };
+
+  // FlatRuler shows a bit more than one full decade at zero rotation (e.g.
+  // ~0.9-11 for a 1-10 scale) rather than cutting the pattern off flush with
+  // the screen edges, since a tick landing exactly on the edge is hard to
+  // read. Expressed as a fraction of one decade's width, padded on each side.
+  FLAT_MARGIN_FRACTION = 0.045;
 
   formatTickLabel = function(value, scale) {
     if (scale.formula.indexOf('sin') >= 0 || scale.formula.indexOf('tan') >= 0) {
@@ -674,7 +680,10 @@
       this.canvas.width = this.width * this.dpr;
       this.canvas.height = this.height * this.dpr;
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      this.bandWidth = this.width;
+      // Zoom out slightly so one decade doesn't exactly fill the screen width
+      // (which would put a tick flush against each edge); see FLAT_MARGIN_FRACTION.
+      this.bandWidth = this.width / (1 + 2 * FLAT_MARGIN_FRACTION);
+      this.marginPx = FLAT_MARGIN_FRACTION * this.bandWidth;
       nBands = this.config.length;
       // Cap band height: unlike the circular layout (naturally bounded by
       // outerRadius), a tall/narrow viewport would otherwise stretch bands
@@ -806,7 +815,7 @@
         ctx.strokeStyle = isHalf ? '#d00' : tickColor;
         ctx.lineWidth = lineWidth;
         for (k = l = -1, ref = repeats; (-1 <= ref ? l <= ref : l >= ref); k = -1 <= ref ? ++l : --l) {
-          x = phase + k * this.bandWidth;
+          x = phase + k * this.bandWidth + this.marginPx;
           if (x < -maxTickLen || x > this.width + maxTickLen) {
             continue;
           }
@@ -840,7 +849,7 @@
     _drawCursor() {
       var ctx, x;
       ctx = this.ctx;
-      x = ((this.cursorAngle % 360) + 360) % 360 / 360 * this.bandWidth;
+      x = ((this.cursorAngle % 360) + 360) % 360 / 360 * this.bandWidth + this.marginPx;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, this.height);
@@ -920,7 +929,7 @@
         startX: x,
         startRotation: this.cursorAngle
       };
-      this.cursorAngle = (x / this.bandWidth * 360 % 360 + 360) % 360;
+      this.cursorAngle = ((x - this.marginPx) / this.bandWidth * 360 % 360 + 360) % 360;
       this.render();
       return typeof this.onCursorMove === "function" ? this.onCursorMove(this.cursorAngle) : void 0;
     }
