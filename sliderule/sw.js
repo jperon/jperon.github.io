@@ -3,7 +3,7 @@
   // sw.coffee — Service worker for offline PWA
   var ASSETS, CACHE_NAME;
 
-  CACHE_NAME = 'slide-rule-v57';
+  CACHE_NAME = 'slide-rule-v58';
 
   ASSETS = ['./', './index.html', './styles.css', './scales.js', './ruler.js', './app.js', './manifest.json'];
 
