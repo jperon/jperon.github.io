@@ -1,6 +1,6 @@
 {
-  "name": "Circular Slide Rule",
-  "short_name": "SlideRule",
+  "name": "Sliderule",
+  "short_name": "Sliderule",
   "description": "A configurable circular slide rule with log, trig, and custom scales",
   "start_url": "./",
   "display": "standalone",

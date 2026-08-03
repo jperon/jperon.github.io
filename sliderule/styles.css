@@ -86,8 +86,30 @@ canvas#ruler:active {
   top: 8px;
   right: 8px;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
   z-index: 10;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.precise-label {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  color: #111;
+  padding: 4px 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 #controls button {
@@ -446,6 +468,87 @@ canvas#ruler:active {
 #io-textarea:focus {
   border-color: #4a6fa5;
   outline: none;
+}
+
+/* Dark mode (true black, for OLED screens) */
+body.dark {
+  background: #000;
+  color: #eee;
+}
+
+body.dark #readout {
+  background: rgba(0, 0, 0, 0.92);
+  border-color: #333;
+}
+
+body.dark .readout-value {
+  color: #aaa;
+}
+
+body.dark #controls button {
+  background: rgba(0, 0, 0, 0.92);
+  border-color: #333;
+  color: #eee;
+}
+
+body.dark #controls button:hover {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+body.dark #controls button:active {
+  background: rgba(45, 45, 45, 0.98);
+}
+
+body.dark #panel {
+  background: rgba(0, 0, 0, 0.98);
+  border-left-color: #333;
+}
+
+body.dark .panel-header button {
+  color: #777;
+}
+
+body.dark .panel-header button:hover {
+  color: #eee;
+}
+
+body.dark .circle-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #333;
+}
+
+body.dark .circle-item-remove {
+  color: #777;
+}
+
+body.dark .circle-item-remove:hover {
+  color: #eee;
+}
+
+body.dark .ring-slot-select,
+body.dark .scale-form input[type="text"],
+body.dark .scale-form input[type="number"],
+body.dark #io-textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #333;
+  color: #eee;
+}
+
+body.dark .toggle-switch {
+  background: #333;
+}
+
+body.dark .scale-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #333;
+}
+
+body.dark .scale-item button {
+  color: #777;
+}
+
+body.dark .scale-item button:hover {
+  color: #eee;
 }
 
 /* Responsive */
