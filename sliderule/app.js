@@ -187,7 +187,7 @@
             }
             return results1;
           }).call(this),
-          minTickAngle: this.ruler.minTickAngle || 1.5,
+          minTickAngle: this.ruler.minTickAngle || 3,
           offCenter: this.ruler.offCenter || false,
           globalRotation: this.ruler.globalRotation || 0,
           darkMode: this.ruler.darkMode || false,

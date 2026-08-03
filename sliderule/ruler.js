@@ -235,7 +235,7 @@
         return;
       }
       ctx = this.ctx;
-      ticks = scale.generateTicks(this.minTickAngle || 1.5);
+      ticks = scale.generateTicks(this.minTickAngle || 3);
       isOuter = side === 'outer';
       tickRadius = isOuter ? outerR : innerR;
       // Inner-edge scales (on the inner boundary of a ring) point outward.
@@ -665,7 +665,7 @@
       this.dragging = null;
       this.darkMode = false;
       this.precise = false;
-      this.minTickAngle = 1.5;
+      this.minTickAngle = 3;
       this.onCursorMove = null;
       this.onCircleRotate = null;
       this.onGlobalRotate = null;
@@ -695,7 +695,7 @@
       // On a narrow screen, one decade's pixel width can be too tight for its
       // minor ticks; raise the angle threshold passed to generateTicks so it
       // thins out subdivisions accordingly (see FLAT_MIN_TICK_PX).
-      this.effectiveMinTickAngle = Math.max(this.minTickAngle || 1.5, FLAT_MIN_TICK_PX * 360 / this.bandWidth);
+      this.effectiveMinTickAngle = Math.max(this.minTickAngle || 3, FLAT_MIN_TICK_PX * 360 / this.bandWidth);
       nBands = this.config.length;
       // Cap band height: unlike the circular layout (naturally bounded by
       // outerRadius), a tall/narrow viewport would otherwise stretch bands
@@ -782,12 +782,12 @@
     }
 
     _drawScaleBand(scale, top, bottom, rotation, side, hasBoth) {
-      var angle, bandHeight, baseline, budget, ctx, fontSize, isHalf, isOuter, j, k, l, label, len, level, lineWidth, maxTickLen, phase, ref, repeats, showLabel, tick, tickColor, tickDir, tickLen, ticks, x;
+      var angle, bandHeight, baseline, budget, ctx, fontSize, inst, instances, isHalf, isOuter, j, k, l, label, labelLeft, labelWidth, lastLabelRight, len, len1, level, lineWidth, m, maxTickLen, phase, ref, repeats, showLabel, tick, tickColor, tickDir, tickLen, ticks, x;
       if (scale.error) {
         return;
       }
       ctx = this.ctx;
-      ticks = scale.generateTicks(this.effectiveMinTickAngle || this.minTickAngle || 1.5);
+      ticks = scale.generateTicks(this.effectiveMinTickAngle || this.minTickAngle || 3);
       isOuter = side === 'outer';
       // Outer-edge scales sit on the band's top border and point down into it;
       // inner-edge scales sit on the bottom border and point up — so, like the
@@ -802,6 +802,11 @@
       // Tile the tick pattern across the visible width so it reads as an
       // "infinite" ruler as the band is dragged past either edge.
       repeats = Math.ceil(this.width / this.bandWidth) + 2;
+      // Collect every (tick, tile) instance first instead of drawing inline,
+      // so labels can be filtered for collisions in actual left-to-right
+      // screen order afterward — the tick/tile loop order doesn't produce
+      // monotonic x positions on its own.
+      instances = [];
       for (j = 0, len = ticks.length; j < len; j++) {
         tick = ticks[j];
         angle = scale.valueToAngle(tick.value);
@@ -824,28 +829,51 @@
           lineWidth = 0.8;
           showLabel = false;
         }
-        ctx.strokeStyle = isHalf ? '#d00' : tickColor;
-        ctx.lineWidth = lineWidth;
         for (k = l = -1, ref = repeats; (-1 <= ref ? l <= ref : l >= ref); k = -1 <= ref ? ++l : --l) {
           x = phase + k * this.bandWidth + this.marginPx;
           if (x < -maxTickLen || x > this.width + maxTickLen) {
             continue;
           }
-          ctx.beginPath();
-          ctx.moveTo(x, baseline);
-          ctx.lineTo(x, baseline + tickDir * tickLen);
-          ctx.stroke();
-          if (showLabel) {
-            ctx.save();
-            ctx.fillStyle = tickColor;
-            ctx.font = 'bold ' + fontSize + 'px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = isOuter ? 'top' : 'bottom';
-            label = formatTickLabel(tick.value, scale);
-            ctx.fillText(label, x, baseline + tickDir * (tickLen + 2));
-            ctx.restore();
-          }
+          instances.push({
+            x,
+            tickLen,
+            lineWidth,
+            isHalf,
+            showLabel,
+            value: tick.value
+          });
         }
+      }
+      instances.sort(function(a, b) {
+        return a.x - b.x;
+      });
+      ctx.font = 'bold ' + fontSize + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = isOuter ? 'top' : 'bottom';
+      // Labels must never collide: skip one that is too close to the last
+      // label actually drawn (its tick is still drawn either way), mirroring
+      // the circular ruler's own label-collision handling.
+      lastLabelRight = -2e308;
+      for (m = 0, len1 = instances.length; m < len1; m++) {
+        inst = instances[m];
+        ctx.strokeStyle = inst.isHalf ? '#d00' : tickColor;
+        ctx.lineWidth = inst.lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(inst.x, baseline);
+        ctx.lineTo(inst.x, baseline + tickDir * inst.tickLen);
+        ctx.stroke();
+        if (!inst.showLabel) {
+          continue;
+        }
+        label = formatTickLabel(inst.value, scale);
+        labelWidth = ctx.measureText(label).width;
+        labelLeft = inst.x - labelWidth / 2;
+        if (labelLeft < lastLabelRight + 2) {
+          continue;
+        }
+        ctx.fillStyle = tickColor;
+        ctx.fillText(label, inst.x, baseline + tickDir * (inst.tickLen + 2));
+        lastLabelRight = inst.x + labelWidth / 2;
       }
       // Scale letter badge: fixed on screen near the left edge, independent of
       // rotation (mirrors the circular ruler's screen-fixed scale label).
