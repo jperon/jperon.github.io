@@ -5,7 +5,7 @@
   // Canvas color palette for the current display mode. True black background
   // in dark mode (not dark gray) since this is meant for OLED screens, where
   // black pixels are actually off. Shared by CircularRuler and FlatRuler.
-  var FLAT_MARGIN_FRACTION, formatTickLabel, themeFor;
+  var FLAT_MARGIN_FRACTION, FLAT_MIN_TICK_PX, formatTickLabel, themeFor;
 
   themeFor = function(darkMode) {
     if (darkMode) {
@@ -30,6 +30,14 @@
   // the screen edges, since a tick landing exactly on the edge is hard to
   // read. Expressed as a fraction of one decade's width, padded on each side.
   FLAT_MARGIN_FRACTION = 0.045;
+
+  // Minimum pixel gap between adjacent minor ticks in FlatRuler. Below this,
+  // thin out subdivisions (same mechanism the circular ruler already uses —
+  // generateTicks(minAngle) — just with minAngle raised so it stays
+  // meaningful when a decade's pixel width is small) rather than keep drawing
+  // ticks too close together to tell apart. Less precise on narrow screens,
+  // but legible, instead of stretching the band past the viewport.
+  FLAT_MIN_TICK_PX = 3;
 
   formatTickLabel = function(value, scale) {
     if (scale.formula.indexOf('sin') >= 0 || scale.formula.indexOf('tan') >= 0) {
@@ -684,6 +692,10 @@
       // (which would put a tick flush against each edge); see FLAT_MARGIN_FRACTION.
       this.bandWidth = this.width / (1 + 2 * FLAT_MARGIN_FRACTION);
       this.marginPx = FLAT_MARGIN_FRACTION * this.bandWidth;
+      // On a narrow screen, one decade's pixel width can be too tight for its
+      // minor ticks; raise the angle threshold passed to generateTicks so it
+      // thins out subdivisions accordingly (see FLAT_MIN_TICK_PX).
+      this.effectiveMinTickAngle = Math.max(this.minTickAngle || 1.5, FLAT_MIN_TICK_PX * 360 / this.bandWidth);
       nBands = this.config.length;
       // Cap band height: unlike the circular layout (naturally bounded by
       // outerRadius), a tall/narrow viewport would otherwise stretch bands
@@ -775,7 +787,7 @@
         return;
       }
       ctx = this.ctx;
-      ticks = scale.generateTicks(this.minTickAngle || 1.5);
+      ticks = scale.generateTicks(this.effectiveMinTickAngle || this.minTickAngle || 1.5);
       isOuter = side === 'outer';
       // Outer-edge scales sit on the band's top border and point down into it;
       // inner-edge scales sit on the bottom border and point up — so, like the
