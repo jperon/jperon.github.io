@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.jperon.cantus",
+      "sha256_cert_fingerprints": [
+        "07:42:8F:70:A2:C9:DC:BB:EA:3A:76:5E:8A:EF:1B:C3:5B:AE:CC:78:DF:43:DD:C1:A8:7B:98:C1:51:80:E1:5D"
+      ]
+    }
+  }
+]

@@ -1,0 +1,8 @@
+title: Jacques PERON
+description: Divers outils
+theme: jekyll-theme-primer
+
+# Nécessaire pour que /.well-known/assetlinks.json (Digital Asset Links, TWA Cantus)
+# soit publié : Jekyll ignore par défaut les fichiers et dossiers commençant par un point.
+include:
+  - ".well-known"
