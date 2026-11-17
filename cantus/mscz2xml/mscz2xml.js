@@ -1,3 +1,27 @@
+/*! @license GPL-3.0-only — mscz2xml, conversion MuseScore vers MusicXML
+ *
+ * Copyright (C) 2026 jperon
+ *
+ * Portage de l'export MusicXML de MuseScore Studio (dépôt
+ * <https://github.com/musescore/MuseScore>), Copyright (C) MuseScore Limited
+ * and others, modifié (réécrit en Rust) en 2026.
+ *
+ * source : https://github.com/jperon/scoretk
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see the LICENSE file delivered with this package or
+ * <https://www.gnu.org/licenses/gpl-3.0.html>.
+ */
+
 /*
  * mscz2xml.js — variante « classic » du paquet wasm (wasm-bindgen
  * --target no-modules), utilisable dans un Web Worker via importScripts().

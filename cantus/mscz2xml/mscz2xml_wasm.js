@@ -1,3 +1,10 @@
+/*! @license GPL-3.0-only — scoretk (WebAssembly)
+ * Copyright (C) 2026 jperon
+ * Portage de MuseScore Studio, Copyright (C) MuseScore Limited and others,
+ * modifié (réécrit en Rust) en 2026.
+ * source : https://github.com/jperon/scoretk
+ * Distribué SANS AUCUNE GARANTIE ; licence complète dans LICENSE.
+ */
 let wasm_bindgen = (function(exports) {
     let script_src;
     if (typeof document !== 'undefined' && document.currentScript !== null) {
