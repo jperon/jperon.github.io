@@ -1,8 +1,8 @@
-/*! @license GPL-3.0-only — mscz2xml, conversion MuseScore vers MusicXML
+/*! @license GPL-3.0-only — scoretk (façade multi-formats)
  *
  * Copyright (C) 2026 jperon
  *
- * Portage de l'export MusicXML de MuseScore Studio (dépôt
+ * Portage de MuseScore Studio (dépôt
  * <https://github.com/musescore/MuseScore>), Copyright (C) MuseScore Limited
  * and others, modifié (réécrit en Rust) en 2026.
  *
@@ -23,25 +23,25 @@
  */
 
 /*
- * mscz2xml.js — variante « classic » du paquet wasm (wasm-bindgen
+ * scoretk.js — variante « classic » du paquet wasm (wasm-bindgen
  * --target no-modules), utilisable dans un Web Worker via importScripts().
  *
- *   importScripts('mscz2xml/classic/mscz2xml.js');
- *   await self.mscz2xml.ready;
- *   const xml = self.mscz2xml.convert(bytes, { encodingDate: '2026-01-01' });
+ *   importScripts('scoretk/classic/scoretk.js');
+ *   await self.scoretk.ready;
+ *   const midi = self.scoretk.convert(bytes, { to: 'midi' });
  *
- * Le script localise ses propres fichiers (mscz2xml_wasm.js et
- * mscz2xml_wasm_bg.wasm) à partir de sa propre URL. Dans un Worker,
+ * Le script localise ses propres fichiers (scoretk_wasm.js et
+ * scoretk_wasm_bg.wasm) à partir de sa propre URL. Dans un Worker,
  * `document.currentScript` n'existe pas : l'URL est retrouvée dans la pile
  * d'appels, puis dans les entrées de performance. En dernier recours, elle est
  * prise à côté du script worker ; on peut alors forcer la base en définissant
- * `self.MSCZ2XML_BASE_URL` avant l'importScripts.
+ * `self.SCORETK_BASE_URL` avant l'importScripts.
  */
 (function (global) {
   'use strict';
 
   // Déjà chargé (importScripts peut être appelé plusieurs fois).
-  if (global.mscz2xml) {
+  if (global.scoretk) {
     return;
   }
 
@@ -49,11 +49,11 @@
     if (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) {
       return document.currentScript.src;
     }
-    // Worker : V8 écrit « at https://…/mscz2xml.js:12:9 », SpiderMonkey
-    // « func@https://…/mscz2xml.js:12:9 ».
+    // Worker : V8 écrit « at https://…/scoretk.js:12:9 », SpiderMonkey
+    // « func@https://…/scoretk.js:12:9 ».
     try {
       var stack = new Error().stack || '';
-      var match = stack.match(/(?:https?|file|blob):\/\/[^\s()]+?\/mscz2xml\.js(?::\d+){0,2}/);
+      var match = stack.match(/(?:https?|file|blob):\/\/[^\s()]+?\/scoretk\.js(?::\d+){0,2}/);
       if (match) {
         return match[0].replace(/(?::\d+){1,2}$/, '');
       }
@@ -68,7 +68,7 @@
           ? global.performance.getEntriesByType('resource')
           : [];
       for (var i = entries.length - 1; i >= 0; i -= 1) {
-        if (/\/mscz2xml\.js(?:\?[^/]*)?$/.test(entries[i].name)) {
+        if (/\/scoretk\.js(?:\?[^/]*)?$/.test(entries[i].name)) {
           return entries[i].name;
         }
       }
@@ -78,7 +78,7 @@
     return global.location ? global.location.href : '';
   }
 
-  var base = global.MSCZ2XML_BASE_URL;
+  var base = global.SCORETK_BASE_URL;
   if (!base) {
     try {
       base = new URL('.', ownScriptUrl()).toString();
@@ -108,24 +108,24 @@
     if (typeof global.importScripts !== 'function') {
       reject(
         new Error(
-          'mscz2xml : la variante classic.js est prévue pour un Web Worker (importScripts) ; ' +
+          'scoretk : la variante classic.js est prévue pour un Web Worker (importScripts) ; ' +
             'en page, utilisez la variante esm.',
         ),
       );
       return;
     }
     try {
-      global.importScripts(fileUrl('mscz2xml_wasm.js'));
+      global.importScripts(fileUrl('scoretk_wasm.js'));
     } catch (error) {
       reject(error);
       return;
     }
     var init = glue();
     if (typeof init !== 'function') {
-      reject(new Error('mscz2xml : wasm_bindgen absent après importScripts'));
+      reject(new Error('scoretk : wasm_bindgen absent après importScripts'));
       return;
     }
-    init({ module_or_path: fileUrl('mscz2xml_wasm_bg.wasm') })
+    init({ module_or_path: fileUrl('scoretk_wasm_bg.wasm') })
       .then(function () {
         exports = glue();
         resolve(api);
@@ -137,7 +137,13 @@
   ready.catch(function () {});
 
   function notReady() {
-    return new Error('mscz2xml : module pas encore prêt ; await self.mscz2xml.ready');
+    return new Error('scoretk : module pas encore prêt ; await self.scoretk.ready');
+  }
+
+  function requireReady() {
+    if (!exports) {
+      throw notReady();
+    }
   }
 
   var api = {
@@ -145,21 +151,33 @@
     ready: ready,
     /** URL de base retenue pour les fichiers du paquet. */
     baseUrl: base,
-    /** Convertit un .mscz/.mscx (Uint8Array) en MusicXML (texte). */
+    /** Convertit un fichier (Uint8Array) vers le format demandé (Uint8Array). */
     convert: function (bytes, options) {
-      if (!exports) {
-        throw notReady();
-      }
+      requireReady();
       return exports.convert(bytes, options);
+    },
+    /** MusicXML identifié + MIDI + carte des temps ({ musicxml, midi, timeline }). */
+    convertWithTimeline: function (bytes, options) {
+      requireReady();
+      return exports.convertWithTimeline(bytes, options);
     },
     /** Version de la bibliothèque. */
     version: function () {
-      if (!exports) {
-        throw notReady();
-      }
+      requireReady();
       return exports.version();
+    },
+    /** Format détecté d'après le contenu, ou null. */
+    detect: function (bytes) {
+      requireReady();
+      var format = exports.detect(bytes);
+      return format === undefined ? null : format;
+    },
+    /** [{ name, extensions, read, write }] — capacités réelles du paquet. */
+    formats: function () {
+      requireReady();
+      return exports.formats();
     },
   };
 
-  global.mscz2xml = api;
+  global.scoretk = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -1,4 +1,4 @@
-/*! @license GPL-3.0-only — scoretk (WebAssembly)
+/*! @license GPL-3.0-only — scoretk (façade multi-formats, WebAssembly)
  * Copyright (C) 2026 jperon
  * Portage de MuseScore Studio, Copyright (C) MuseScore Limited and others,
  * modifié (réécrit en Rust) en 2026.
@@ -12,38 +12,81 @@ let wasm_bindgen = (function(exports) {
     }
 
     /**
-     * Convertit un `.mscz` ou un `.mscx` en MusicXML `partwise` (texte UTF-8).
+     * Convertit un fichier de partition d'un format vers un autre.
      *
-     * `input` est le contenu binaire du fichier. Une entrée illisible lève une
-     * `Error` JavaScript dont le message est celui de l'erreur Rust d'origine.
+     * `input` est le contenu binaire du fichier. `from` est détecté par le
+     * contenu s'il est absent ; `to` vaut `"musicxml"` par défaut. Toute erreur
+     * (format inconnu ou non pris en charge, entrée illisible, échec de
+     * conversion) devient une `Error` JavaScript portant le message Rust.
      * @param {Uint8Array | number[]} input
      * @param {ConvertOptions | null} [options]
-     * @returns {string}
+     * @returns {Uint8Array}
      */
     function convert(input, options) {
-        let deferred3_0;
-        let deferred3_1;
-        try {
-            const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
-            const ret = wasm.convert(ptr0, len0, isLikeNone(options) ? 0 : addToExternrefTable0(options));
-            var ptr2 = ret[0];
-            var len2 = ret[1];
-            if (ret[3]) {
-                ptr2 = 0; len2 = 0;
-                throw takeFromExternrefTable0(ret[2]);
-            }
-            deferred3_0 = ptr2;
-            deferred3_1 = len2;
-            return getStringFromWasm0(ptr2, len2);
-        } finally {
-            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+        const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.convert(ptr0, len0, isLikeNone(options) ? 0 : addToExternrefTable0(options));
+        if (ret[3]) {
+            throw takeFromExternrefTable0(ret[2]);
         }
+        var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v2;
     }
     exports.convert = convert;
 
     /**
-     * Version de la bibliothèque, telle que déclarée dans `Cargo.toml`.
+     * Produit le MusicXML identifié, le MIDI et la carte des temps du même rendu.
+     *
+     * `from` est résolu comme dans [`convert`] (détection par le contenu si
+     * absent). `to` est ignoré : la sortie contient toujours les deux formats.
+     * Le MusicXML porte `id` **et** `xml:id` sur chaque mesure et chaque note ;
+     * ces valeurs sont exactement les `xmlId` de `timeline`. Les noms de champs
+     * JavaScript sont en `camelCase`, le type Rust reste `Timemap` (voir
+     * `docs/agents/timemap.md`).
+     * @param {Uint8Array | number[]} input
+     * @param {ConvertOptions | null} [options]
+     * @returns {any}
+     */
+    function convertWithTimeline(input, options) {
+        const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.convertWithTimeline(ptr0, len0, isLikeNone(options) ? 0 : addToExternrefTable0(options));
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
+    }
+    exports.convertWithTimeline = convertWithTimeline;
+
+    /**
+     * Devine le format d'après le contenu, ou `null` si rien ne correspond.
+     * @param {Uint8Array | number[]} input
+     * @returns {any}
+     */
+    function detect(input) {
+        const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.detect(ptr0, len0);
+        return ret;
+    }
+    exports.detect = detect;
+
+    /**
+     * Décrit les sept formats reconnus et leurs capacités compilées.
+     * @returns {Array<any>}
+     */
+    function formats() {
+        const ret = wasm.formats();
+        return ret;
+    }
+    exports.formats = formats;
+
+    /**
+     * Version de la façade, telle que déclarée dans `Cargo.toml`.
+     *
+     * `skip_typescript` : la déclaration exacte est dans la section TypeScript de
+     * [`api`], avec les autres fonctions exposées.
      * @returns {string}
      */
     function version() {
@@ -66,6 +109,19 @@ let wasm_bindgen = (function(exports) {
                 const ret = Error(getStringFromWasm0(arg0, arg1));
                 return ret;
             },
+            __wbg___wbindgen_boolean_get_4f1baf9a00be3c74: function(arg0) {
+                const v = arg0;
+                const ret = typeof(v) === 'boolean' ? v : undefined;
+                return isLikeNone(ret) ? 0xFFFFFF : ret ? 1 : 0;
+            },
+            __wbg___wbindgen_is_null_c22311b1cc228e3a: function(arg0) {
+                const ret = arg0 === null;
+                return ret;
+            },
+            __wbg___wbindgen_is_undefined_be5b34249ff1fc15: function(arg0) {
+                const ret = arg0 === undefined;
+                return ret;
+            },
             __wbg___wbindgen_string_get_7ce8eee7fd327545: function(arg0, arg1) {
                 const obj = arg1;
                 const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -81,7 +137,32 @@ let wasm_bindgen = (function(exports) {
                 const ret = Reflect.get(arg0, arg1);
                 return ret;
             }, arguments); },
-            __wbindgen_generic_0000000000000001: function(arg0, arg1) {
+            __wbg_new_37eb45aaf5eeb820: function() {
+                const ret = new Array();
+                return ret;
+            },
+            __wbg_new_cd4348290afae586: function() {
+                const ret = new Object();
+                return ret;
+            },
+            __wbg_new_from_slice_b8daf545a41c6aa0: function(arg0, arg1) {
+                const ret = new Uint8Array(getArrayU8FromWasm0(arg0, arg1));
+                return ret;
+            },
+            __wbg_push_c9f4893fc209f768: function(arg0, arg1) {
+                const ret = arg0.push(arg1);
+                return ret;
+            },
+            __wbg_set_2793479888329cb6: function() { return handleError(function (arg0, arg1, arg2) {
+                const ret = Reflect.set(arg0, arg1, arg2);
+                return ret;
+            }, arguments); },
+            __wbindgen_generic_0000000000000001: function(arg0) {
+                // Cast intrinsic for `F64 -> Externref`.
+                const ret = arg0;
+                return ret;
+            },
+            __wbindgen_generic_0000000000000002: function(arg0, arg1) {
                 // Cast intrinsic for `Ref(String) -> Externref`.
                 const ret = getStringFromWasm0(arg0, arg1);
                 return ret;
@@ -97,7 +178,7 @@ let wasm_bindgen = (function(exports) {
         };
         return {
             __proto__: null,
-            "./mscz2xml_wasm_bg.js": import0,
+            "./scoretk_wasm_bg.js": import0,
         };
     }
 
@@ -105,6 +186,11 @@ let wasm_bindgen = (function(exports) {
         const idx = wasm.__externref_table_alloc();
         wasm.__wbindgen_externrefs.set(idx, obj);
         return idx;
+    }
+
+    function getArrayU8FromWasm0(ptr, len) {
+        ptr = ptr >>> 0;
+        return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
     }
 
     let cachedDataViewMemory0 = null;
