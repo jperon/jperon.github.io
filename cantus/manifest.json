@@ -10,7 +10,11 @@
   "orientation": "portrait",
   "scope": "./",
   "lang": "fr",
-  "categories": ["music", "education", "productivity"],
+  "categories": [
+    "music",
+    "education",
+    "productivity"
+  ],
   "protocol_handlers": [
     {
       "protocol": "web+musicxml",
@@ -25,17 +29,47 @@
     {
       "action": "./",
       "accept": {
-        "application/vnd.recordare.musicxml+xml": [".musicxml", ".xml"],
-        "application/vnd.recordare.musicxml": [".mxl"],
-        "text/xml": [".xml"],
-        "application/xml": [".xml"],
-        "application/x-musescore": [".mscz", ".mscx"],
-        "application/octet-stream": [".mscz", ".mscx"],
-        "text/x-lilypond": [".ly", ".lilypond"],
-        "text/vnd.abc": [".abc"],
-        "text/plain": [".ly", ".lilypond", ".abc"],
-        "audio/midi": [".mid", ".midi"],
-        "audio/x-midi": [".mid", ".midi"]
+        "application/vnd.recordare.musicxml+xml": [
+          ".musicxml",
+          ".xml"
+        ],
+        "application/vnd.recordare.musicxml": [
+          ".mxl"
+        ],
+        "text/xml": [
+          ".xml"
+        ],
+        "application/xml": [
+          ".xml"
+        ],
+        "application/x-musescore": [
+          ".mscz",
+          ".mscx"
+        ],
+        "application/octet-stream": [
+          ".mscz",
+          ".mscx"
+        ],
+        "text/x-lilypond": [
+          ".ly",
+          ".lilypond"
+        ],
+        "text/vnd.abc": [
+          ".abc"
+        ],
+        "text/plain": [
+          ".ly",
+          ".lilypond",
+          ".abc"
+        ],
+        "audio/midi": [
+          ".mid",
+          ".midi"
+        ],
+        "audio/x-midi": [
+          ".mid",
+          ".midi"
+        ]
       }
     }
   ],
@@ -49,21 +83,59 @@
       "files": [
         {
           "name": "file",
-          "accept": ["application/vnd.recordare.musicxml+xml", "application/vnd.recordare.musicxml",
-                     "application/xml", "text/xml", "application/octet-stream", "application/zip",
-                     "audio/x-musescore", "application/x-musescore", "text/x-lilypond",
-                     "text/vnd.abc", "text/plain", "audio/midi", "audio/x-midi",
-                     ".musicxml", ".mxl", ".mscz", ".mscx", ".ly", ".lilypond", ".abc",
-                     ".mid", ".midi"]
+          "accept": [
+            "application/vnd.recordare.musicxml+xml",
+            "application/vnd.recordare.musicxml",
+            "text/xml",
+            "application/xml",
+            "application/x-musescore",
+            "application/octet-stream",
+            "application/zip",
+            "audio/x-musescore",
+            "text/x-lilypond",
+            "text/vnd.abc",
+            "text/plain",
+            "audio/midi",
+            "audio/x-midi",
+            ".musicxml",
+            ".mxl",
+            ".mscz",
+            ".mscx",
+            ".ly",
+            ".lilypond",
+            ".abc",
+            ".mid",
+            ".midi"
+          ]
         }
       ]
     }
   },
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "screenshots": [
     {
