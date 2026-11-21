@@ -67,57 +67,61 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## soundfont-player
+## SpessaSynth (spessasynth_lib et spessasynth_core)
 
-- Licence : MIT
-- Copyright © 2015 Daniel Gómez Blasco <danigb@gmail.com>
-- Source : <https://github.com/danigb/soundfont-player>
+- Licence : Apache License 2.0
+- Copyright © 2026 Spessasus
+- Sources : <https://github.com/spessasus/spessasynth_lib> et
+  <https://github.com/spessasus/spessasynth_core>
 
-soundfont-player est utilisé pour charger et jouer les échantillons du
-soundfont. Le fichier distribué (`soundfont-player.min.js`) embarque ses
-dépendances : `audio-loader`, `sample-player`, `note-parser` (MIT),
-`adsr` (ISC) et `midimessage` (MIT).
+SpessaSynth est le synthétiseur MIDI utilisé pour jouer la banque General
+MIDI. `build.js` embarque le bundle navigateur de `spessasynth_lib` (qui
+inclut `spessasynth_core` et le décodeur Vorbis `stb-vorbis`, MIT) et son
+processeur AudioWorklet `spessasynth_processor.min.js`.
 
-```text
-The MIT License
+Le texte complet de la licence Apache 2.0 est disponible à l'adresse
+<https://www.apache.org/licenses/LICENSE-2.0>.
 
-Copyright (c) 2015 Daniel Gómez Blasco <danigb@gmail.com>
+## TimGM6mb (banque General MIDI, SF3)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+- Licence : GNU GPL version 2 seulement (GPL-2.0-only), d'après le fichier
+  `debian/copyright` du paquet Debian. L'amont (Tim Brechbill) indique que
+  les échantillons sont soit de lui, soit du domaine public, soit sous GPL.
+  Ce n'est pas « ou ultérieure » : la compatibilité avec la GPL-3.0-or-later
+  du reste de Cantus est à faire confirmer avec l'amont avant diffusion.
+- Copyright © 2004 Tim Brechbill, © 2010 David Bolton
+- Source amont : <https://www.timbrechbill.com> et
+  <https://github.com/musescore/musescore-old/commit/90c33ef9d87b3f5ff92efd3b07d89eb455fb1fef>
+- Source utilisée : paquet Debian `timgm6mb-soundfont` 1.3,
+  <http://deb.debian.org/debian/pool/main/t/timgm6mb-soundfont/timgm6mb-soundfont_1.3.orig.tar.gz>
+  - sha256 de l'archive : `af8f3a00e416dfb262bcaa904a1c84df04a51b72bbc1313aed012bc754bdf99b`
+  - sha256 de `TimGM6mb.sf2` (5 969 788 octets) : `c5378b62028c920cb11e4803327983fee2f2cdff5dc89c708e39da417e51c854`
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Cantus distribue une version compressée en SF3, `pwa/soundfonts/TimGM6mb.sf3`
+(1 976 938 octets, sha256
+`deb62fc32331a2ef2ab64ee8be869f927e01898c2ea6a52e5eb5150765759ee6`), produite
+par `tools/build-soundfont.py`. Transformations appliquées :
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- réduction des zones de clavier : une zone conservée toutes les deux
+  octaves (24 demi-tons) par preset et par couche de vélocité, tessiture
+  élargie pour couvrir le même ambitus (520 → 404 échantillons ; 136 presets,
+  dont les 8 kits de percussion, inchangés) ;
+- suppression des échantillons devenus orphelins et réécriture des tables
+  `pdta` (`phdr`, `pbag`, `pgen`, `inst`, `ibag`, `igen`, `shdr`) ;
+- encodage de chaque échantillon en Ogg Vorbis mono 16 bits, qualité 2
+  (`oggenc`), et conversion des points de boucle en offsets relatifs au flux
+  décodé, comme l'exige le SF3 ;
+- pas de rééchantillonnage (les fréquences d'origine, 11 à 44,6 kHz, sont
+  conservées) et pas de raccourcissement des queues de boucle (elles font
+  déjà 206 ms au plus) : ces deux transformations ne changent pas la taille,
+  l'en-tête Vorbis de chaque flux pesant environ 3,4 ko.
+
+Régénération :
+
+```sh
+nix-shell -p python3Packages.numpy vorbis-tools --run \
+  "python3 tools/build-soundfont.py"
 ```
-
-## Échantillons FluidR3_GM (piano)
-
-- Licence : Creative Commons Attribution 3.0 Unported (CC-BY 3.0)
-- Source : <https://github.com/gleitz/midi-js-soundfonts> (branche `gh-pages`,
-  fichier `FluidR3_GM/acoustic_grand_piano-mp3.js`)
-- Échantillons FluidR3 par Frank Wen, rendu MIDI.js par Benjamin Gleitzman
-- Texte de la licence : <https://creativecommons.org/licenses/by/3.0/>
-
-Cantus distribue un sous-ensemble de 13 notes (`C2` à `C6`, une tous les
-4 demi-tons) sous forme de données audio encodées en base64, dans
-`pwa/soundfonts/piano-fluidr3-13notes.js` (puis `dist/soundfonts/`). Ce
-fichier est généré par `tools/build-soundfont-subset.js`.
-
-L'attribution CC-BY 3.0 doit rester visible : elle figure dans l'en-tête de
-l'asset, dans ce fichier et doit être reprise dans l'écran « À propos » (ou
-la section d'attribution de l'interface) avec un lien vers la licence.
 
 ## scoretk
 
