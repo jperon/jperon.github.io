@@ -137,6 +137,42 @@ let wasm_bindgen = (function(exports) {
                 const ret = Reflect.get(arg0, arg1);
                 return ret;
             }, arguments); },
+            __wbg_get_unchecked_e6325ad374eff861: function(arg0, arg1) {
+                const ret = arg0[arg1 >>> 0];
+                return ret;
+            },
+            __wbg_instanceof_Object_97e16a01fd368661: function(arg0) {
+                let result;
+                try {
+                    result = arg0 instanceof Object;
+                } catch (_) {
+                    result = false;
+                }
+                const ret = result;
+                return ret;
+            },
+            __wbg_instanceof_Uint8Array_d7aeb0dcb3108fea: function(arg0) {
+                let result;
+                try {
+                    result = arg0 instanceof Uint8Array;
+                } catch (_) {
+                    result = false;
+                }
+                const ret = result;
+                return ret;
+            },
+            __wbg_keys_105f5c0857898f84: function(arg0) {
+                const ret = Object.keys(arg0);
+                return ret;
+            },
+            __wbg_length_186163212ffe79c3: function(arg0) {
+                const ret = arg0.length;
+                return ret;
+            },
+            __wbg_length_b03a0fabb109b1e9: function(arg0) {
+                const ret = arg0.length;
+                return ret;
+            },
             __wbg_new_37eb45aaf5eeb820: function() {
                 const ret = new Array();
                 return ret;
@@ -148,6 +184,9 @@ let wasm_bindgen = (function(exports) {
             __wbg_new_from_slice_b8daf545a41c6aa0: function(arg0, arg1) {
                 const ret = new Uint8Array(getArrayU8FromWasm0(arg0, arg1));
                 return ret;
+            },
+            __wbg_prototypesetcall_13162965d1fe7aa3: function(arg0, arg1, arg2) {
+                Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
             },
             __wbg_push_c9f4893fc209f768: function(arg0, arg1) {
                 const ret = arg0.push(arg1);

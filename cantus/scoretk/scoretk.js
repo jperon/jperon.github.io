@@ -151,12 +151,12 @@
     ready: ready,
     /** URL de base retenue pour les fichiers du paquet. */
     baseUrl: base,
-    /** Convertit un fichier (Uint8Array) vers le format demandé (Uint8Array). */
+    /** Convertit un fichier (Uint8Array) vers le format demandé (Uint8Array). Les options sont transmises telles quelles, y compris `includes` (table chemin relatif -> Uint8Array) pour les `\include` LilyPond d'un dossier. */
     convert: function (bytes, options) {
       requireReady();
       return exports.convert(bytes, options);
     },
-    /** MusicXML identifié + MIDI + carte des temps ({ musicxml, midi, timeline }). */
+    /** MusicXML identifié + MIDI + carte des temps ({ musicxml, midi, timeline }) ; accepte les mêmes options, `includes` compris. */
     convertWithTimeline: function (bytes, options) {
       requireReady();
       return exports.convertWithTimeline(bytes, options);
