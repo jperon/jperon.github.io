@@ -57,10 +57,14 @@
         "text/vnd.abc": [
           ".abc"
         ],
+        "text/x-gabc": [
+          ".gabc"
+        ],
         "text/plain": [
           ".ly",
           ".lilypond",
-          ".abc"
+          ".abc",
+          ".gabc"
         ],
         "audio/midi": [
           ".mid",
@@ -94,6 +98,7 @@
             "audio/x-musescore",
             "text/x-lilypond",
             "text/vnd.abc",
+            "text/x-gabc",
             "text/plain",
             "audio/midi",
             "audio/x-midi",
@@ -105,7 +110,8 @@
             ".lilypond",
             ".abc",
             ".mid",
-            ".midi"
+            ".midi",
+            ".gabc"
           ]
         }
       ]
