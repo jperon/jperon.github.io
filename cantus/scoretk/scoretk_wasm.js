@@ -36,6 +36,27 @@ let wasm_bindgen = (function(exports) {
     exports.convert = convert;
 
     /**
+     * Comme [`convert`], mais renvoie aussi le rapport de pertes structuré.
+     *
+     * Les octets sont exactement ceux de [`convert`] ; seule la forme de retour
+     * change (`{ bytes, losses }`). Cette fonction est additive : `convert` et
+     * `convertWithTimeline` gardent leur signature et leur comportement.
+     * @param {Uint8Array | number[]} input
+     * @param {ConvertOptions | null} [options]
+     * @returns {any}
+     */
+    function convertDetailed(input, options) {
+        const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.convertDetailed(ptr0, len0, isLikeNone(options) ? 0 : addToExternrefTable0(options));
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
+    }
+    exports.convertDetailed = convertDetailed;
+
+    /**
      * Produit le MusicXML identifié, le MIDI et la carte des temps du même rendu.
      *
      * `from` est résolu comme dans [`convert`] (détection par le contenu si
@@ -73,7 +94,7 @@ let wasm_bindgen = (function(exports) {
     exports.detect = detect;
 
     /**
-     * Décrit les sept formats reconnus et leurs capacités compilées.
+     * Décrit les huit formats reconnus et leurs capacités compilées.
      * @returns {Array<any>}
      */
     function formats() {

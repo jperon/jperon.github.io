@@ -161,6 +161,11 @@
       requireReady();
       return exports.convertWithTimeline(bytes, options);
     },
+    /** Additif : mêmes octets que convert, plus { bytes, losses }. */
+    convertDetailed: function (bytes, options) {
+      requireReady();
+      return exports.convertDetailed(bytes, options);
+    },
     /** Version de la bibliothèque. */
     version: function () {
       requireReady();
