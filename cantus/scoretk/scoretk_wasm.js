@@ -94,7 +94,7 @@ let wasm_bindgen = (function(exports) {
     exports.detect = detect;
 
     /**
-     * Décrit les huit formats reconnus et leurs capacités compilées.
+     * Décrit les formats disponibles dans cette compilation et leurs capacités.
      * @returns {Array<any>}
      */
     function formats() {
